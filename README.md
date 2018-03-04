@@ -1,3 +1,3 @@
 # TronGame
 
-Simple game of Tron for up to 5 players, made using python and pygame, to learn about graphic and keyboard interface.
+Simple game of Tron for up to 5 players made in order to learn more about graphic and keyboard interface using pygame library.
