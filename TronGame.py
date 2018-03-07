@@ -3,8 +3,7 @@ import random
 from copy import deepcopy
 
 '''
-bug where different players can occupy the same cell at the same time without anyone losing, when they move at the same time to the cell
-could create code to check for this(eng.check_invalid()) but dont feel like it
+add overal score?
 '''
 
 class Cell:
@@ -25,36 +24,51 @@ class Player:
 	def move(self, move):
 		'Computes the next move of a player'
 		self.path.append(deepcopy(self.pos))
-		if   move == "last":   move = self.last_move
-		if   move == "left":
-			if self.pos[0]==0:                  self.state = "dead"
-			else:                               self.pos[0]-= 1
-		elif move == "right":
-			if self.pos[0]==eng.map_size[0]-1:  self.state = "dead"
-			else:                               self.pos[0]+= 1
-		elif move == "up":
-			if self.pos[1]==0:                  self.state = "dead"
-			else:                               self.pos[1]-= 1
-		elif move == "down":
-			if self.pos[1]==eng.map_size[1]-1:  self.state = "dead"
-			else:                               self.pos[1]+= 1
 		if self.state=="alive":
+			if   move == "last":   move = self.last_move
+			if   move == "left":
+				if self.last_move=="right" and self.score!=0:
+					self.pos[0]+= 1
+				else:
+					self.pos[0]-= 1
+					self.last_move="left"
+			elif move == "right":
+				if self.last_move == "left" and self.score!=0:
+					self.pos[0]-= 1
+				else:
+					self.pos[0]+= 1
+					self.last_move = "right"
+			elif move == "up":
+				if self.last_move == "down" and self.score!=0:
+					self.pos[1]+= 1
+				else:
+					self.pos[1]-= 1
+					self.last_move = "up"
+			elif move == "down":
+				if self.last_move == "up" and self.score!=0:
+					self.pos[1]-= 1
+				else:
+					self.pos[1]+= 1
+					self.last_move = "down"
 			self.score    += 1
-			self.last_move = move
 
 
 class TronEngine:
 	def __init__(self, nplayers, size=(40, 25)):
 		########## Game settings ########
 		self.map_size   = size if size[0]>14 and size[1]>14 else (25, 15) # size must be at least (15, 15)
+		pygame.mixer.init()
+		pygame.mixer.music.load("sandstorm_darude.mp3")
+		pygame.mixer.music.play(-1,0.0)
 		########## Game Atributes #######
 		self.map        = self.create_map()                               # array with cell objects
 		self.players    = self.create_players(nplayers)                   # dict with player objects
 
-	def wait4keypress(self):
+	def wait4keypress(self, key=pygame.KEYDOWN):
 		'Waits for a key to be pressed, else stays idle'
-		while not pygame.event.peek(pygame.KEYDOWN):
+		while not pygame.event.peek(key):
 			clock.tick(10)
+
 
 	def create_map(self):
 		'Initializes the map with cell objects'
@@ -131,11 +145,14 @@ class TronEngine:
 	def check_invalid(self):
 		'Checks if a player´s posiion is invalid and if so, removes it from the game'
 		invalid  = []
-		for player in self.players.values():
+		for player in [p for p in self.players.values() if p.state=="alive"]:
 			invalid += player.path
 		l2remove = []
-		for player in self.players.values():
-			if player.state=="dead" or player.pos in invalid:
+		for player in [p for p in self.players.values() if p.state=="alive"]:
+			if   ( player.pos[0]==-1 or player.pos[0]==eng.map_size[0]
+				or player.pos[1]==-1 or player.pos[1]==eng.map_size[1]
+				or player.pos in invalid
+				or player.pos in [p.pos for p in self.players.values() if p.id!=player.id]):
 				l2remove.append(player)
 			else:
 				cell = eng.map[player.pos[1]][player.pos[0]]
@@ -157,9 +174,10 @@ class TronEngine:
 		'Checks a player has won(if its the only one still alive)'
 		players_alive = [p for p in self.players.values() if p.state=="alive"]
 		if len(players_alive)<=1:
-			scored_players = [[p, p.score] for p in self.players.values()]
-			scored_players.sort(key=lambda x: x[1], reverse=True)
-			window.display_ending_score(scored_players)
+			scored_players = [[p, p.score] for p in self.players.values() if p.state=="dead"]
+			scored_players.sort(key=lambda x: x[1])
+			scored_players += [[p, p.score] for p in self.players.values() if p.state=="alive"]
+			window.display_ending_score(scored_players[::-1])
 			return True
 
 class TronWindow:
@@ -222,7 +240,7 @@ class TronWindow:
 
 
 if __name__ == '__main__':
-	player_num = 4          # from 1 to 5 players
+	player_num = 5          # from 1 to 5 players
 	game_size  = (40, 25)   # game size in cells           -> (game window in pixles games size*cell_size)
 	cell_size  = 20         # size of each cell in pixels  -> (should be at least 600x300 for a good display)
 	game_speed = 15         # fps = moves per second       -> recommended 10-15
