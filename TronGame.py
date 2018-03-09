@@ -1,10 +1,5 @@
 import pygame
 import random
-from copy import deepcopy
-
-'''
-add overal score?
-'''
 
 class Cell:
 	def __init__(self, pos, state):
@@ -23,7 +18,7 @@ class Player:
 
 	def move(self, move):
 		'Computes the next move of a player'
-		self.path.append(deepcopy(self.pos))
+		self.path.append([self.pos[0], self.pos[1]])
 		if self.state=="alive":
 			if   move == "last":   move = self.last_move
 			if   move == "left":
@@ -57,18 +52,19 @@ class TronEngine:
 	def __init__(self, nplayers, size=(40, 25)):
 		########## Game settings ########
 		self.map_size   = size if size[0]>14 and size[1]>14 else (25, 15) # size must be at least (15, 15)
-		pygame.mixer.init()
-		pygame.mixer.music.load("sandstorm_darude.mp3")
-		pygame.mixer.music.play(-1,0.0)
 		########## Game Atributes #######
 		self.map        = self.create_map()                               # array with cell objects
 		self.players    = self.create_players(nplayers)                   # dict with player objects
+
+	def play_music(self, music_file):
+		pygame.mixer.init()
+		pygame.mixer.music.load(music_file)
+		pygame.mixer.music.play(-1, 0.0)
 
 	def wait4keypress(self, key=pygame.KEYDOWN):
 		'Waits for a key to be pressed, else stays idle'
 		while not pygame.event.peek(key):
 			clock.tick(10)
-
 
 	def create_map(self):
 		'Initializes the map with cell objects'
@@ -240,12 +236,13 @@ class TronWindow:
 
 
 if __name__ == '__main__':
-	player_num = 5          # from 1 to 5 players
+	player_num = 2          # from 1 to 5 players
 	game_size  = (40, 25)   # game size in cells           -> (game window in pixles games size*cell_size)
 	cell_size  = 20         # size of each cell in pixels  -> (should be at least 600x300 for a good display)
 	game_speed = 15         # fps = moves per second       -> recommended 10-15
 	clock      = pygame.time.Clock()
 	eng        = TronEngine(player_num, game_size)
+	eng.play_music("sandstorm_darude.mp3")
 	window     = TronWindow(game_size, cell_size)
 	eng.wait4keypress()
 	window.display_all(eng.map)
