@@ -57,9 +57,12 @@ class TronEngine:
 		self.players    = self.create_players(nplayers)                   # dict with player objects
 
 	def play_music(self, music_file):
-		pygame.mixer.init()
-		pygame.mixer.music.load(music_file)
-		pygame.mixer.music.play(-1, 0.0)
+		try:
+			pygame.mixer.init()
+			pygame.mixer.music.load(music_file)
+			pygame.mixer.music.play(-1, 0.0)
+		except:
+			print("Error playing music!")
 
 	def wait4keypress(self, key=pygame.KEYDOWN):
 		'Waits for a key to be pressed, else stays idle'
