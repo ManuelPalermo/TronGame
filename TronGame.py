@@ -83,7 +83,7 @@ class TronEngine:
 		players_pos = list(zip(starts_x, starts_y))
 		players = {}
 		for n in range(nplayers):
-			name = "Broco " + str(n+1)#input("Insert player %s name: " % n)
+			name = "Player " + str(n+1)#input("Insert player %s name: " % n)
 			self.map[players_pos[n][1]][players_pos[n][0]].state = str(n)
 			players[n] = Player(n, name, list(players_pos[n]))
 		return players
